@@ -28,11 +28,14 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          echo "$KEYSTORE_BASE64" | base64 -d > release.keystore
+          if [ -z "$KEYSTORE_BASE64" ]; then echo "ERRO: KEYSTORE_BASE64 vazio"; exit 1; fi
+          if [ -z "$KEYSTORE_PASSWORD" ]; then echo "ERRO: KEYSTORE_PASSWORD vazio"; exit 1; fi
+          if [ -z "$KEY_ALIAS" ]; then echo "ERRO: KEY_ALIAS vazio"; exit 1; fi
+          printf "%s" "$KEYSTORE_BASE64" | tr -d ' \n\r' | base64 -d > release.keystore
           jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
             -keystore release.keystore \
             -storepass "$KEYSTORE_PASSWORD" \
-            -keypass "$KEY_PASSWORD" \
+            -keypass "${KEY_PASSWORD:-$KEYSTORE_PASSWORD}" \
             android/app/build/outputs/bundle/release/app-release.aab \
             "$KEY_ALIAS"
           rm -f release.keystore
