@@ -28,16 +28,18 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          if [ -z "$KEYSTORE_BASE64" ]; then echo "ERRO: KEYSTORE_BASE64 vazio"; exit 1; fi
-          if [ -z "$KEYSTORE_PASSWORD" ]; then echo "ERRO: KEYSTORE_PASSWORD vazio"; exit 1; fi
-          if [ -z "$KEY_ALIAS" ]; then echo "ERRO: KEY_ALIAS vazio"; exit 1; fi
-          printf "%s" "$KEYSTORE_BASE64" | tr -d ' \n\r' | base64 -d > release.keystore
+          CLEAN_B64=$(printf "%s" "$KEYSTORE_BASE64" | tr -d ' \n\r')
+          CLEAN_PASS=$(printf "%s" "$KEYSTORE_PASSWORD" | tr -d ' \n\r')
+          CLEAN_ALIAS=$(printf "%s" "$KEY_ALIAS" | tr -d ' \n\r')
+          CLEAN_KEYPASS=$(printf "%s" "${KEY_PASSWORD:-$KEYSTORE_PASSWORD}" | tr -d ' \n\r')
+
+          printf "%s" "$CLEAN_B64" | base64 -d > release.keystore
           jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
             -keystore release.keystore \
-            -storepass "$KEYSTORE_PASSWORD" \
-            -keypass "${KEY_PASSWORD:-$KEYSTORE_PASSWORD}" \
+            -storepass "$CLEAN_PASS" \
+            -keypass "$CLEAN_KEYPASS" \
             android/app/build/outputs/bundle/release/app-release.aab \
-            "$KEY_ALIAS"
+            "$CLEAN_ALIAS"
           rm -f release.keystore
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
