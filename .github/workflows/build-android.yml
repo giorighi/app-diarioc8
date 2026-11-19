@@ -25,21 +25,22 @@ jobs:
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           CLEAN_B64=$(printf "%s" "$KEYSTORE_BASE64" | tr -d ' \n\r')
           CLEAN_PASS=$(printf "%s" "$KEYSTORE_PASSWORD" | tr -d ' \n\r')
-          CLEAN_ALIAS=$(printf "%s" "$KEY_ALIAS" | tr -d ' \n\r')
           CLEAN_KEYPASS=$(printf "%s" "${KEY_PASSWORD:-$KEYSTORE_PASSWORD}" | tr -d ' \n\r')
 
           printf "%s" "$CLEAN_B64" | base64 -d > release.keystore
+          REAL_ALIAS=$(keytool -list -keystore release.keystore -storepass "$CLEAN_PASS" | grep "PrivateKeyEntry" | head -n 1 | cut -d',' -f1)
+          echo "Alias detectado: $REAL_ALIAS"
+
           jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
             -keystore release.keystore \
             -storepass "$CLEAN_PASS" \
             -keypass "$CLEAN_KEYPASS" \
             android/app/build/outputs/bundle/release/app-release.aab \
-            "$CLEAN_ALIAS"
+            "$REAL_ALIAS"
           rm -f release.keystore
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
