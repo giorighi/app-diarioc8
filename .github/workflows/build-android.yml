@@ -1,4 +1,4 @@
-name: Build Android App
+name: Build Signed Android App
 on:
   push:
     branches: [ main ]
@@ -21,10 +21,25 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug bundleRelease
+      - name: Sign Release AAB
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > release.keystore
+          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
+            -keystore release.keystore \
+            -storepass "$KEYSTORE_PASSWORD" \
+            -keypass "$KEY_PASSWORD" \
+            android/app/build/outputs/bundle/release/app-release.aab \
+            "$KEY_ALIAS"
+          rm -f release.keystore
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: app-diarioc8-builds
+          name: app-diarioc8-signed-builds
           path: |
             android/app/build/outputs/apk/debug/app-debug.apk
             android/app/build/outputs/bundle/release/app-release.aab
