@@ -1,0 +1,1742 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Calculadora Financeira 12C RPN · @diarioc8</title>
+<!-- Tailwind CDN & Google Fonts -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@500;700;800&amp;display=swap" rel="stylesheet"/>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          navy: {
+            950: '#070f1b',
+            900: '#0B192C',
+            800: '#132743',
+            700: '#1E3A5F',
+            600: '#2A4D7A',
+          },
+          gold: {
+            300: '#F3D98B',
+            400: '#E6C252',
+            500: '#D4AF37',
+          },
+          emerald: {
+            500: '#1F8A5B',
+            600: '#166944',
+          },
+          sky: {
+            shift: '#5BA4E6',
+            light: '#38BDF8',
+          },
+          lcd: {
+            bg: '#D8E2DC',
+            fg: '#0B192C',
+            sub: '#294336'
+          }
+        },
+        fontFamily: {
+          sans: ['Inter', 'sans-serif'],
+          mono: ['JetBrains Mono', 'monospace'],
+        }
+      }
+    }
+  }
+</script>
+<style>
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    background-color: #070f1b;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #F8FAFC;
+    user-select: none;
+    touch-action: manipulation;
+  }
+  /* Key styling */
+  .key-base {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 2px 4px 2px;
+    border-radius: 8px;
+    background: #132743;
+    border: 1px solid #1E3A5F;
+    box-shadow: 0 3px 0 #070e17, inset 0 1px 0 rgba(255,255,255,0.08);
+    transition: all 0.05s ease;
+    cursor: pointer;
+    min-height: 48px;
+  }
+  .key-base:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #070e17, inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .key-num {
+    background: #FFFFFF !important;
+    border-color: #CBD5E1 !important;
+    box-shadow: 0 3px 0 #0f1c2d, inset 0 1px 0 rgba(255,255,255,0.8) !important;
+  }
+  .key-num .key-label-main {
+    color: #0B192C !important;
+    font-weight: 800;
+  }
+  .key-f-shift {
+    background: #D4AF37 !important;
+    border-color: #F3D98B !important;
+    box-shadow: 0 3px 0 #8C731E !important;
+  }
+  .key-f-shift .key-label-main {
+    color: #0B192C !important;
+    font-weight: 800;
+  }
+  .key-g-shift {
+    background: #5BA4E6 !important;
+    border-color: #93C5FD !important;
+    box-shadow: 0 3px 0 #1E40AF !important;
+  }
+  .key-g-shift .key-label-main {
+    color: #0B192C !important;
+    font-weight: 800;
+  }
+  .key-enter {
+    background: #1F8A5B !important;
+    border-color: #2da872 !important;
+    box-shadow: 0 3px 0 #0e452c, inset 0 1px 0 rgba(255,255,255,0.2) !important;
+  }
+  .key-enter .key-label-main {
+    color: #FFFFFF !important;
+  }
+  .tab-item.active {
+    color: #D4AF37;
+    border-bottom: 2px solid #D4AF37;
+    background: rgba(212, 175, 55, 0.08);
+  }
+  .chart-toggle.active {
+    background-color: #1F8A5B;
+    color: #FFFFFF;
+    border-color: #2da872;
+  }
+  /* Custom scrollbar for tables */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0B192C;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1E3A5F;
+    border-radius: 4px;
+  }
+</style>
+</head>
+<body class="flex justify-center min-h-screen sm:py-4">
+<div class="w-full max-w-[460px] bg-navy-900 flex flex-col shadow-2xl sm:rounded-2xl border-x sm:border border-navy-700/60 min-h-screen sm:min-h-0 sm:h-[860px] overflow-hidden">
+<!-- TOP BRANDING HEADER -->
+<header class="bg-navy-950 px-4 py-2.5 flex items-center justify-between border-b border-gold-500/40 z-20">
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="text-xs font-black tracking-wider text-white">12C FINANCIAL</span>
+<span class="text-[10px] bg-gold-500/20 text-gold-300 font-mono font-bold px-1.5 py-0.5 rounded border border-gold-500/30">RPN</span>
+</div>
+<span class="text-[11px] font-bold text-gold-500 tracking-wide">@diarioc8</span>
+</div>
+<div class="flex items-center gap-2">
+<a class="inline-flex items-center gap-1 text-[11px] font-bold bg-navy-800 hover:bg-navy-700 text-slate-200 px-2.5 py-1.5 rounded-full border border-navy-600 transition" href="https://www.google.com/finance" rel="noopener noreferrer" target="_blank" title="Consultar cotações e índices">
+<svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+</svg>
+<span>G·Finance</span>
+</a>
+<button class="inline-flex items-center gap-1 text-[11px] font-bold bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-full shadow-sm transition active:scale-95" onclick="openReasoningModal()">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span>Exportar</span>
+</button>
+</div>
+</header>
+<!-- NAVIGATION TABS -->
+<nav class="grid grid-cols-5 bg-navy-950/80 border-b border-navy-800 text-[10.5px] font-bold text-slate-400">
+<button class="tab-item py-2 px-0.5 text-center transition active truncate" onclick="switchTab('tab-calc', this)">
+      Calculadora
+    </button>
+<button class="tab-item py-2 px-0.5 text-center transition truncate" onclick="switchTab('tab-treasury', this)">
+      Tesouro/NTN-B
+    </button>
+<button class="tab-item py-2 px-0.5 text-center transition truncate" onclick="switchTab('tab-cf', this)">
+      Fluxo Caixa
+    </button>
+<button class="tab-item py-2 px-0.5 text-center transition truncate" onclick="switchTab('tab-dep', this)">
+      Deprec/Bonds
+    </button>
+<button class="tab-item py-2 px-0.5 text-center transition truncate" onclick="switchTab('tab-amort', this)">
+      Amortização
+    </button>
+</nav>
+<!-- LCD DISPLAY SECTION -->
+<section class="bg-navy-950 px-3 pt-2 pb-2.5 flex-shrink-0">
+<div class="bg-lcd-bg rounded-lg p-2.5 border-2 border-gold-500/80 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]">
+<!-- Upper LCD indicators -->
+<div class="flex items-center justify-between text-[10px] font-mono font-bold text-lcd-sub mb-0.5 border-b border-lcd-sub/20 pb-0.5">
+<div class="flex items-center gap-1.5" id="lcd-flags">
+<span class="bg-navy-900/10 px-1 rounded">D.MY</span>
+<span class="bg-navy-900/10 px-1 rounded">FIX 2</span>
+</div>
+<div class="font-extrabold text-navy-900" id="lcd-shift-indicator">
+<!-- Active Shift state rendered here -->
+</div>
+</div>
+<!-- Main LCD Numbers -->
+<div class="text-right font-mono text-[28px] leading-tight font-extrabold text-lcd-fg tracking-tight overflow-x-auto whitespace-nowrap py-0.5" id="lcd-main">
+        0.00
+      </div>
+<!-- Financial Register Status -->
+<div class="flex justify-between items-center text-[9px] font-mono font-bold text-lcd-sub/90 pt-1 border-t border-lcd-sub/20" id="lcd-tvm">
+<span>n:0</span><span>i:0.00%</span><span>PV:0</span><span>PMT:0</span><span>FV:0</span>
+</div>
+</div>
+<!-- RPN Stack Peek Ribbon -->
+<div class="flex items-center justify-between px-1 mt-1.5 text-[9.5px] font-mono font-medium text-gold-300/80">
+<div class="truncate max-w-[280px]" id="stack-peek">Y: 0.00 · Z: 0.00 · T: 0.00 · LSTx: 0.00</div>
+<div class="flex items-center gap-1 text-emerald-400 font-bold shrink-0">
+<span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        RPN PILHA
+      </div>
+</div>
+</section>
+<!-- CONTENT PANELS CONTAINER -->
+<div class="flex-1 flex flex-col overflow-y-auto bg-navy-900">
+<!-- TAB 1: RPN KEYPAD -->
+<div class="tab-panel flex-1 flex flex-col justify-between p-2" id="tab-calc">
+<!-- 5x8 RPN Classic Keypad Grid -->
+<div class="grid grid-cols-5 gap-1.5" id="keypad"></div>
+</div>
+<!-- TAB: TESOURO DIRETO / NTN-B & PREFIXADOS -->
+<div class="tab-panel hidden p-4 space-y-3" id="tab-treasury">
+<div class="border-l-4 border-gold-500 pl-2.5">
+<div class="flex items-center justify-between">
+<h3 class="text-sm font-bold text-white uppercase tracking-wider">Títulos Públicos Federais</h3>
+<span class="text-[10px] bg-gold-500/20 text-gold-300 font-mono px-1.5 py-0.5 rounded border border-gold-500/30 font-bold">ANBIMA</span>
+</div>
+<p class="text-[11px] text-slate-400">Simulação de NTN-B (IPCA+ com Cupons), NTN-B Principal e LTN Prefixada</p>
+</div>
+<!-- Formulário de Simulação -->
+<div class="space-y-2.5">
+<div>
+<label class="block text-[10px] font-bold text-gold-300 uppercase mb-1">Tipo de Título Público</label>
+<select class="w-full bg-navy-950 border border-navy-700 rounded-lg px-2.5 py-2 text-xs font-bold text-white focus:outline-none focus:border-gold-500" id="tb-type" onchange="onBondTypeChange()">
+<option value="NTNB_COUPON">Tesouro IPCA+ com Juros Semestrais (NTN-B)</option>
+<option value="NTNB_PRINCIPAL">Tesouro IPCA+ Principal (Sem Cupons)</option>
+<option value="LTN_PREFIX">Tesouro Prefixado (LTN - VNA R$ 1.000)</option>
+<option value="NTNF_COUPON">Tesouro Prefixado com Juros (NTN-F 10% a.a.)</option>
+</select>
+</div>
+<div class="grid grid-cols-2 gap-2.5">
+<div>
+<label class="block text-[10px] font-bold text-gold-300 uppercase mb-1">Taxa Anual Acordada (% a.a.)</label>
+<input class="w-full bg-navy-950 border border-navy-700 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-white focus:outline-none focus:border-gold-500" id="tb-yield" step="0.01" type="number" value="6.45"/>
+</div>
+<div id="wrap-ipca">
+<label class="block text-[10px] font-bold text-gold-300 uppercase mb-1">IPCA Projetado (% a.a.)</label>
+<input class="w-full bg-navy-950 border border-navy-700 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-white focus:outline-none focus:border-gold-500" id="tb-ipca" step="0.01" type="number" value="4.00"/>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-2">
+<div>
+<label class="block text-[10px] font-bold text-gold-300 uppercase mb-1">Prazo (Anos)</label>
+<input class="w-full bg-navy-950 border border-navy-700 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-white focus:outline-none focus:border-gold-500" id="tb-years" min="0.5" onchange="autoUpdateIR()" step="0.5" type="number" value="5"/>
+</div>
+<div>
+<label class="block text-[10px] font-bold text-gold-300 uppercase mb-1">Investimento (R$)</label>
+<input class="w-full bg-navy-950 border border-navy-700 rounded-lg px-2 py-1.5 text-xs font-mono font-bold text-white focus:outline-none focus:border-gold-500" id="tb-invest" step="100" type="number" value="10000"/>
+</div>
+<div>
+<label class="block text-[10px] font-bold text-gold-300 uppercase mb-1">IR Previsto</label>
+<select class="w-full bg-navy-950 border border-navy-700 rounded-lg px-1.5 py-1.5 text-xs font-mono font-bold text-white focus:outline-none focus:border-gold-500" id="tb-ir">
+<option value="15.0">15,0% (&gt;720d)</option>
+<option value="17.5">17,5% (361-720d)</option>
+<option value="20.0">20,0% (181-360d)</option>
+<option value="22.5">22,5% (até 180d)</option>
+</select>
+</div>
+</div>
+</div>
+<!-- Ações Principais -->
+<div class="grid grid-cols-2 gap-2 pt-1">
+<button class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 rounded-lg text-xs tracking-wider transition active:scale-[0.98]" onclick="calcTreasuryBond()">
+          SIMULAR TÍTULO
+        </button>
+<button class="w-full bg-navy-800 hover:bg-navy-700 text-gold-300 border border-gold-500/50 font-bold py-2 rounded-lg text-xs transition active:scale-[0.98] flex items-center justify-center gap-1" onclick="sendTreasuryToRPN()">
+<span>⚡ TVM / RPN</span>
+</button>
+</div>
+<!-- Resumo dos Indicadores Financeiros -->
+<div class="bg-navy-950 border border-navy-800 rounded-lg p-2.5 grid grid-cols-2 gap-2 text-xs font-mono">
+<div class="border-r border-navy-800 pr-2 space-y-1">
+<div class="text-[10px] text-slate-400">Preço Unitário (PU Est.):</div>
+<div class="text-white font-extrabold text-sm" id="res-pu">R$ 4.281,30</div>
+<div class="text-[10px] text-slate-400">Qtd. Títulos:</div>
+<div class="text-gold-300 font-bold" id="res-qty">2.3356 títulos</div>
+</div>
+<div class="pl-1 space-y-1">
+<div class="text-[10px] text-slate-400">Total Líquido Estimado:</div>
+<div class="text-emerald-400 font-extrabold text-sm" id="res-net-total">R$ 15.820,40</div>
+<div class="text-[10px] text-slate-400">Rentabilidade Líquida:</div>
+<div class="text-gold-400 font-bold" id="res-net-yield">+58.20% (+9.61% a.a.)</div>
+</div>
+</div>
+<!-- CARTÕES DE RISCO & SENSIBILIDADE DE TAXA (DURATION & DV01) -->
+<div class="space-y-1.5 pt-0.5">
+<div class="flex items-center justify-between px-0.5">
+<span class="text-[10px] font-bold text-sky-shift uppercase tracking-wider flex items-center gap-1">
+<svg class="w-3.5 h-3.5 text-sky-shift" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+Métricas de Risco &amp; Sensibilidade
+</span>
+<span class="text-[9px] bg-sky-shift/10 text-sky-shift px-1.5 py-0.5 rounded border border-sky-shift/30 font-mono font-bold">ANBIMA / BACEN</span>
+</div>
+<div class="grid grid-cols-3 gap-1.5">
+<!-- Macaulay Duration Card -->
+<div class="bg-navy-950 border border-navy-700/80 rounded-lg p-2 flex flex-col justify-between hover:border-gold-500/50 transition">
+<div>
+<div class="text-[9px] text-slate-400 font-bold uppercase tracking-wider flex items-center justify-between">
+<span>Macaulay</span>
+<span class="text-gold-500 font-mono text-[8.5px]">D_mac</span>
+</div>
+<div class="text-sm font-extrabold text-gold-300 font-mono mt-0.5" id="kpi-mac-years">4.40 <span class="text-[10px] font-sans font-normal text-slate-400">anos</span></div>
+</div>
+<div class="text-[8.5px] font-mono text-slate-400 border-t border-navy-800 pt-1 mt-1 leading-tight" id="kpi-mac-days">
+1.109 d.u. · 1.606 d.c.
+</div>
+</div>
+<!-- Modified Duration Card -->
+<div class="bg-navy-950 border border-navy-700/80 rounded-lg p-2 flex flex-col justify-between hover:border-sky-shift/50 transition">
+<div>
+<div class="text-[9px] text-slate-400 font-bold uppercase tracking-wider flex items-center justify-between">
+<span>Modificada</span>
+<span class="text-sky-shift font-mono text-[8.5px]">D_mod</span>
+</div>
+<div class="text-sm font-extrabold text-sky-shift font-mono mt-0.5" id="kpi-mod-duration">4.26% <span class="text-[10px] font-sans font-normal text-slate-400">/ 100bps</span></div>
+</div>
+<div class="text-[8.5px] font-mono text-slate-400 border-t border-navy-800 pt-1 mt-1 leading-tight" id="kpi-mod-sub">
+ΔP/P p/ +1% na taxa
+</div>
+</div>
+<!-- DV01 Card -->
+<div class="bg-navy-950 border border-navy-700/80 rounded-lg p-2 flex flex-col justify-between hover:border-emerald-500/50 transition">
+<div>
+<div class="text-[9px] text-slate-400 font-bold uppercase tracking-wider flex items-center justify-between">
+<span>DV01 (1 bps)</span>
+<span class="text-emerald-400 font-mono text-[8.5px]">R$/bps</span>
+</div>
+<div class="text-sm font-extrabold text-emerald-400 font-mono mt-0.5" id="kpi-dv01-pu">R$ 1,82 <span class="text-[10px] font-sans font-normal text-slate-400">/ PU</span></div>
+</div>
+<div class="text-[8.5px] font-mono text-slate-400 border-t border-navy-800 pt-1 mt-1 leading-tight" id="kpi-dv01-total">
+Total: R$ 4,26 / bps
+</div>
+</div>
+</div>
+</div>
+<!-- SEÇÃO GRÁFICA INTERATIVA: MARCAÇÃO A MERCADO (MTM) & CURVA DE JUROS (ETTJ) -->
+<div class="bg-navy-950 border border-navy-800 rounded-xl p-3 space-y-2.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-gold-400"></span>
+<span class="text-xs font-bold text-white uppercase tracking-wider">Análise Gráfica de Mercado</span>
+</div>
+<div class="flex items-center gap-1 bg-navy-900 p-0.5 rounded-lg border border-navy-700 text-[10px] font-bold">
+<button class="chart-toggle px-2 py-0.5 rounded transition active" id="btn-chart-mtm" onclick="switchVisualChart('MTM')">
+Curva MTM (PU)
+</button>
+<button class="chart-toggle px-2 py-0.5 rounded transition text-slate-400" id="btn-chart-ettj" onclick="switchVisualChart('ETTJ')">
+Curva ETTJ
+</button>
+</div>
+</div>
+<!-- VIEW 1: Sensibilidade de Marcação a Mercado (Curva PU vs Taxa e Tangente da Duration) -->
+<div class="space-y-2" id="chart-view-mtm">
+<div class="flex items-center justify-between text-[10px] text-slate-400">
+<span>Curva de Sensibilidade PU vs Variação de Taxa (bps)</span>
+<span class="text-gold-300 font-mono font-bold" id="mtm-cur-status">Tx: 6.45% | PU: R$ 4.281,30</span>
+</div>
+<!-- SVG Container do Gráfico de Marcação a Mercado -->
+<div class="w-full bg-navy-900 border border-navy-800 rounded-lg p-2 relative overflow-hidden">
+<svg class="w-full h-auto select-none" id="svg-mtm" viewbox="0 0 400 170"></svg>
+<!-- Tooltip Dinâmico -->
+<div class="absolute top-2 left-2 pointer-events-none bg-navy-950/95 border border-gold-500/70 text-[9.5px] font-mono p-1.5 rounded shadow-lg transition-all duration-75 hidden z-10" id="mtm-tooltip">
+</div>
+</div>
+<!-- Tabela Compacta de Sensibilidade e Choques de Taxa -->
+<div class="grid grid-cols-7 gap-1 text-[9px] font-mono text-center" id="mtm-pills">
+<!-- Gerado dinamicamente via JS -->
+</div>
+<div class="flex items-center justify-between text-[9px] text-slate-400 px-0.5">
+<span class="flex items-center gap-1"><span class="w-2.5 h-0.5 bg-gold-400 inline-block"></span> Preço Real (Convexidade)</span>
+<span class="flex items-center gap-1"><span class="w-2.5 h-0.5 bg-sky-shift inline-block stroke-dasharray"></span> Aproximação D_mod</span>
+<span class="text-emerald-400 font-bold">● Base Atual</span>
+</div>
+</div>
+<!-- VIEW 2: Estrutura a Termo da Taxa de Juros (ETTJ) Comparativa -->
+<div class="hidden space-y-2" id="chart-view-ettj">
+<div class="flex items-center justify-between text-[10px] text-slate-400">
+<span>Curva de Juros Soberana (Tesouro IPCA+ vs Prefixado)</span>
+<div class="flex items-center gap-2">
+<span class="text-gold-400 font-bold flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-gold-400"></span> IPCA+</span>
+<span class="text-sky-light font-bold flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-sky-light"></span> Prefixado</span>
+</div>
+</div>
+<!-- SVG Container ETTJ -->
+<div class="w-full bg-navy-900 border border-navy-800 rounded-lg p-2 relative overflow-hidden">
+<svg class="w-full h-auto select-none" id="svg-ettj" viewbox="0 0 400 170"></svg>
+<div class="absolute top-2 right-2 pointer-events-none bg-navy-950/95 border border-sky-shift/70 text-[9.5px] font-mono p-1.5 rounded shadow-lg hidden z-10" id="ettj-tooltip">
+</div>
+</div>
+<!-- Grid de Vencimentos da Curva ETTJ -->
+<div class="grid grid-cols-5 gap-1.5 text-center text-[9px] font-mono">
+<div class="bg-navy-900 border border-navy-800 rounded p-1">
+<div class="text-slate-400 text-[8.5px]">2026 (Curto)</div>
+<div class="text-gold-300 font-bold">6.15%</div>
+<div class="text-sky-light">11.85%</div>
+</div>
+<div class="bg-navy-900 border border-navy-800 rounded p-1">
+<div class="text-slate-400 text-[8.5px]">2029 (Médio)</div>
+<div class="text-gold-300 font-bold">6.35%</div>
+<div class="text-sky-light">12.10%</div>
+</div>
+<div class="bg-navy-900 border border-navy-800 rounded p-1">
+<div class="text-slate-400 text-[8.5px]">2035 (Interm.)</div>
+<div class="text-gold-300 font-bold">6.52%</div>
+<div class="text-sky-light">12.35%</div>
+</div>
+<div class="bg-navy-900 border border-navy-800 rounded p-1">
+<div class="text-slate-400 text-[8.5px]">2045 (Longo)</div>
+<div class="text-gold-300 font-bold">6.64%</div>
+<div class="text-sky-light">12.48%</div>
+</div>
+<div class="bg-navy-900 border border-navy-800 rounded p-1">
+<div class="text-slate-400 text-[8.5px]">2055 (Ultra)</div>
+<div class="text-gold-300 font-bold">6.70%</div>
+<div class="text-sky-light">12.55%</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Cronograma de Cupons Semestrais / Fluxo de Caixa & Desconto Duration -->
+<div>
+<div class="flex items-center justify-between mb-1">
+<span class="text-[10px] font-bold text-gold-300 uppercase tracking-wider">Cronograma de Fluxos &amp; Duration</span>
+<span class="text-[9.5px] font-mono text-slate-400" id="coupon-count-badge">10 semestres</span>
+</div>
+<div class="overflow-x-auto max-h-36 border border-navy-800 rounded-lg bg-navy-950">
+<table class="w-full text-left text-[11px]" id="tb-table">
+<thead class="bg-navy-800 text-gold-400 font-bold sticky top-0 text-[10px]">
+<tr>
+<th class="p-1.5 text-center">Sem.</th>
+<th class="p-1.5 text-right">Cupom Líq.</th>
+<th class="p-1.5 text-right">Fluxo Bruto</th>
+<th class="p-1.5 text-right text-sky-shift">VP Desc.(t)</th>
+<th class="p-1.5 text-right text-gold-300">Pond. t*VP</th>
+<th class="p-1.5 text-right text-emerald-400">Fluxo Líq.</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-navy-800 font-mono text-slate-300">
+<tr><td class="p-3 text-center text-slate-500" colspan="6">Clique em 'Simular Título' para gerar o fluxo</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Exportações -->
+<div class="grid grid-cols-2 gap-2">
+<button class="w-full bg-navy-800 hover:bg-navy-700 text-gold-300 border border-gold-500/40 font-bold py-2 rounded-lg text-[11px] transition" onclick="downloadCSV('tesouro_direto_diarioc8.csv', 'tb-table')">
+          📥 Baixar CSV Cupons &amp; Risco
+        </button>
+<button class="w-full bg-navy-800 hover:bg-navy-700 text-white border border-navy-700 font-bold py-2 rounded-lg text-[11px] transition" onclick="openReasoningModal()">
+          📤 Memória ANBIMA &amp; Duration
+        </button>
+</div>
+</div>
+<!-- TAB 2: CASH FLOW (NPV / IRR) -->
+<div class="tab-panel hidden p-4 space-y-3" id="tab-cf">
+<div class="border-l-4 border-gold-500 pl-2.5">
+<h3 class="text-sm font-bold text-white uppercase tracking-wider">Fluxo de Caixa Descontado</h3>
+<p class="text-[11px] text-slate-400">Análise de Viabilidade Econômica (VPL e Taxa Interna de Retorno)</p>
+</div>
+<div class="grid grid-cols-2 gap-2.5 pt-1">
+<div>
+<label class="block text-[10px] font-bold text-gold-300 uppercase mb-1">CF0 (Invest. Inicial)</label>
+<input class="w-full bg-navy-950 border border-navy-700 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-white focus:outline-none focus:border-gold-500" id="cf0-input" step="any" type="number" value="-10000"/>
+</div>
+<div>
+<label class="block text-[10px] font-bold text-gold-300 uppercase mb-1">Taxa Desconto (% a.p.)</label>
+<input class="w-full bg-navy-950 border border-navy-700 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-white focus:outline-none focus:border-gold-500" id="cf-rate" step="any" type="number" value="10"/>
+</div>
+</div>
+<div>
+<label class="block text-[10px] font-bold text-gold-300 uppercase mb-1">Fluxos Futuros (CF1, CF2, CF3...)</label>
+<input class="w-full bg-navy-950 border border-navy-700 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-white focus:outline-none focus:border-gold-500" id="cf-list" placeholder="Ex: 2500, 3000, 4500" type="text" value="3500, 4200, 5100"/>
+</div>
+<button class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 rounded-lg text-xs tracking-wider transition active:scale-[0.98]" onclick="calcCashFlow()">
+        CALCULAR VPL (NPV) &amp; TIR (IRR)
+      </button>
+<div class="bg-navy-950 border border-navy-800 rounded-lg p-3">
+<span class="text-[10px] font-mono text-gold-500 uppercase tracking-widest block mb-1">Resultado da Análise</span>
+<div class="text-xs font-mono text-slate-200 whitespace-pre-wrap leading-relaxed" id="cf-result">
+Preencha os fluxos acima e clique em Calcular.
+        </div>
+</div>
+<button class="w-full bg-navy-800 hover:bg-navy-700 text-gold-300 border border-gold-500/40 font-bold py-2 rounded-lg text-xs transition" onclick="openReasoningModal()">
+        📤 Exportar Memória de VPL / TIR
+      </button>
+</div>
+<!-- TAB 3: DEPRECIATION & BONDS -->
+<div class="tab-panel hidden p-4 space-y-3" id="tab-dep">
+<div class="border-l-4 border-gold-500 pl-2.5">
+<h3 class="text-sm font-bold text-white uppercase tracking-wider">Cronograma de Depreciação</h3>
+<p class="text-[11px] text-slate-400">Comparação anual SL (Linear), SOYD e Saldo Decrescente (DB)</p>
+</div>
+<div class="grid grid-cols-2 gap-2.5">
+<div>
+<label class="block text-[10px] font-bold text-gold-300 uppercase mb-1">Custo Inicial (PV)</label>
+<input class="w-full bg-navy-950 border border-navy-700 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-white focus:outline-none focus:border-gold-500" id="dep-cost" type="number" value="50000"/>
+</div>
+<div>
+<label class="block text-[10px] font-bold text-gold-300 uppercase mb-1">Valor Residual (FV)</label>
+<input class="w-full bg-navy-950 border border-navy-700 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-white focus:outline-none focus:border-gold-500" id="dep-salvage" type="number" value="5000"/>
+</div>
+<div>
+<label class="block text-[10px] font-bold text-gold-300 uppercase mb-1">Vida Útil (Anos)</label>
+<input class="w-full bg-navy-950 border border-navy-700 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-white focus:outline-none focus:border-gold-500" id="dep-years" type="number" value="5"/>
+</div>
+<div>
+<label class="block text-[10px] font-bold text-gold-300 uppercase mb-1">Método</label>
+<select class="w-full bg-navy-950 border border-navy-700 rounded-lg px-2 py-1.5 text-xs font-bold text-white focus:outline-none focus:border-gold-500" id="dep-method">
+<option value="SL">Linear (SL)</option>
+<option value="SOYD">Soma dos Dígitos (SOYD)</option>
+<option value="DB">Saldo Decrescente 200% (DB)</option>
+</select>
+</div>
+</div>
+<button class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 rounded-lg text-xs tracking-wider transition active:scale-[0.98]" onclick="buildDepSchedule()">
+        GERAR CRONOGRAMA ANUAL
+      </button>
+<div class="overflow-x-auto max-h-44 border border-navy-800 rounded-lg bg-navy-950">
+<table class="w-full text-left text-[11px]" id="dep-table">
+<thead class="bg-navy-800 text-gold-400 font-bold sticky top-0">
+<tr>
+<th class="p-2 text-center">Ano</th>
+<th class="p-2 text-right">Deprec.</th>
+<th class="p-2 text-right">Acumulada</th>
+<th class="p-2 text-right">Saldo</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-navy-800 font-mono text-slate-300">
+<tr><td class="p-4 text-center text-slate-500" colspan="4">Clique em Gerar Cronograma</td></tr>
+</tbody>
+</table>
+</div>
+<button class="w-full bg-navy-800 hover:bg-navy-700 text-gold-300 border border-gold-500/40 font-bold py-2 rounded-lg text-xs transition" onclick="downloadCSV('depreciacao_diarioc8.csv', 'dep-table')">
+        📥 Baixar Planilha CSV (Excel)
+      </button>
+</div>
+<!-- TAB 4: AMORTIZATION (PRICE & SAC) -->
+<div class="tab-panel hidden p-4 space-y-3" id="tab-amort">
+<div class="border-l-4 border-gold-500 pl-2.5">
+<h3 class="text-sm font-bold text-white uppercase tracking-wider">Simulador de Amortização</h3>
+<p class="text-[11px] text-slate-400">Comparativo das Tabelas Price (Parcelas Fixas) e SAC</p>
+</div>
+<div class="grid grid-cols-2 gap-2.5">
+<div>
+<label class="block text-[10px] font-bold text-gold-300 uppercase mb-1">Valor Financiado (PV)</label>
+<input class="w-full bg-navy-950 border border-navy-700 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-white focus:outline-none focus:border-gold-500" id="am-pv" type="number" value="100000"/>
+</div>
+<div>
+<label class="block text-[10px] font-bold text-gold-300 uppercase mb-1">Taxa Juros (% a.m.)</label>
+<input class="w-full bg-navy-950 border border-navy-700 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-white focus:outline-none focus:border-gold-500" id="am-rate" step="0.01" type="number" value="1.0"/>
+</div>
+<div>
+<label class="block text-[10px] font-bold text-gold-300 uppercase mb-1">Prazo (Meses)</label>
+<input class="w-full bg-navy-950 border border-navy-700 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-white focus:outline-none focus:border-gold-500" id="am-n" type="number" value="12"/>
+</div>
+<div>
+<label class="block text-[10px] font-bold text-gold-300 uppercase mb-1">Sistema</label>
+<select class="w-full bg-navy-950 border border-navy-700 rounded-lg px-2 py-1.5 text-xs font-bold text-white focus:outline-none focus:border-gold-500" id="am-sys">
+<option value="PRICE">Tabela Price (Fixa)</option>
+<option value="SAC">SAC (Amort. Constante)</option>
+</select>
+</div>
+</div>
+<button class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 rounded-lg text-xs tracking-wider transition active:scale-[0.98]" onclick="buildAmortTable()">
+        SIMULAR PARCELAS
+      </button>
+<div class="overflow-x-auto max-h-44 border border-navy-800 rounded-lg bg-navy-950">
+<table class="w-full text-left text-[11px]" id="amort-table">
+<thead class="bg-navy-800 text-gold-400 font-bold sticky top-0">
+<tr>
+<th class="p-2 text-center">Mês</th>
+<th class="p-2 text-right">Parcela</th>
+<th class="p-2 text-right">Juros</th>
+<th class="p-2 text-right">Amort.</th>
+<th class="p-2 text-right">Saldo</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-navy-800 font-mono text-slate-300">
+<tr><td class="p-4 text-center text-slate-500" colspan="5">Clique em Simular Parcelas</td></tr>
+</tbody>
+</table>
+</div>
+<button class="w-full bg-navy-800 hover:bg-navy-700 text-gold-300 border border-gold-500/40 font-bold py-2 rounded-lg text-xs transition" onclick="downloadCSV('amortizacao_diarioc8.csv', 'amort-table')">
+        📥 Baixar Planilha CSV (Excel)
+      </button>
+</div>
+</div>
+<!-- FOOTER STATUS -->
+<footer class="bg-navy-950 px-3 py-1.5 border-t border-navy-800 flex items-center justify-between text-[10px] text-slate-400 shrink-0">
+<span class="font-medium">Precisão Institucional RPN</span>
+<span class="font-bold text-gold-500">@diarioc8 · Finanças</span>
+</footer>
+</div>
+<!-- AUDIT / REASONING EXPORT MODAL -->
+<div class="fixed inset-0 bg-navy-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" id="reasoning-modal">
+<div class="bg-navy-900 border-2 border-gold-500/80 rounded-xl w-full max-w-sm overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
+<div class="bg-navy-950 px-4 py-3 flex items-center justify-between border-b border-navy-800">
+<div class="flex items-center gap-1.5">
+<span class="text-gold-500 font-bold text-sm">📋 Memória de Cálculo</span>
+<span class="text-[10px] bg-gold-500/20 text-gold-300 px-1.5 py-0.5 rounded font-mono font-bold">@diarioc8</span>
+</div>
+<button class="text-slate-400 hover:text-white text-lg font-bold" onclick="closeReasoningModal()">✕</button>
+</div>
+<div class="p-4 space-y-3 overflow-y-auto">
+<div class="bg-navy-950 border border-navy-800 rounded-lg p-3">
+<pre class="font-mono text-[11px] leading-relaxed text-slate-200 whitespace-pre-wrap" id="reasoning-text"></pre>
+</div>
+<div class="grid grid-cols-2 gap-2">
+<button class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 rounded-lg text-xs transition flex items-center justify-center gap-1" onclick="shareReasoning()">
+          📲 Compartilhar
+        </button>
+<button class="bg-navy-800 hover:bg-navy-700 text-gold-300 border border-gold-500/40 font-bold py-2 rounded-lg text-xs transition flex items-center justify-center gap-1" onclick="downloadReasoningTXT()">
+          📥 Baixar .TXT
+        </button>
+</div>
+<button class="w-full bg-navy-800 hover:bg-navy-700 text-white font-bold py-2 rounded-lg text-xs border border-navy-700 transition" onclick="copyReasoning()">
+        📋 Copiar para Área de Transferência
+      </button>
+</div>
+</div>
+</div>
+<script>
+// State Management
+const state = {
+  stack: [0, 0, 0, 0],
+  lastX: 0,
+  lift: true,
+  n: 0, i: 0, pv: 0, pmt: 0, fv: 0,
+  beg: false,
+  dateMode: "D.MY",
+  regs: Array(10).fill(0),
+  buf: "",
+  shift: null,
+  prefix: null,
+  lastWasTvm: false,
+  decimals: 2,
+  customMsg: null,
+  lastLog: "Nenhuma operação complexa executada ainda. Use as teclas financeiras ou abas para registrar o raciocínio."
+};
+
+// Dados da última simulação de Tesouro Direto para transferência ao TVM e gráficos
+let lastTreasurySim = null;
+
+// 40 Key Matrix (5 cols x 8 rows) with exact financial mappings
+const KEYS = [
+  // Row 1: TVM primary registers
+  { f:"AMORT", m:"n",   g:"12×",  id:"n" },
+  { f:"INT",   m:"i",   g:"12÷",  id:"i" },
+  { f:"NPV",   m:"PV",  g:"CF0",  id:"PV" },
+  { f:"RND",   m:"PMT", g:"CFj",  id:"PMT" },
+  { f:"IRR",   m:"FV",  g:"Nj",   id:"FV" },
+
+  // Row 2: Powers, Inverses, Percentages
+  { f:"PRICE", m:"yˣ",  g:"√x",   id:"YX" },
+  { f:"YTM",   m:"1/x", g:"eˣ",   id:"INV" },
+  { f:"SL",    m:"%T",  g:"LN",   id:"SL" },
+  { f:"SOYD",  m:"Δ%",  g:"FRAC", id:"SOYD" },
+  { f:"DB",    m:"%",   g:"INTG", id:"DB" },
+
+  // Row 3: Math and Navigation
+  { f:"",      m:"CHS", g:"DATE", id:"CHS" },
+  { f:"",      m:"EEX", g:"ΔDYS", id:"DDYS" },
+  { f:"",      m:"R↓",  g:"GTO",  id:"RDOWN" },
+  { f:"",      m:"x≷y", g:"x≤y",  id:"SWAP" },
+  { f:"REG",   m:"CLX", g:"x=0",  id:"CLX" },
+
+  // Row 4: Digits 7,8,9 + Division + STO
+  { f:"",      m:"7",   g:"BEG",  id:"7", num:true },
+  { f:"",      m:"8",   g:"END",  id:"8", num:true },
+  { f:"",      m:"9",   g:"MEM",  id:"9", num:true },
+  { f:"",      m:"÷",   g:"",     id:"DIV" },
+  { f:"",      m:"STO", g:"(i)",  id:"STO" },
+
+  // Row 5: Digits 4,5,6 + Multiplier + RCL
+  { f:"",      m:"4",   g:"D.MY", id:"4", num:true },
+  { f:"",      m:"5",   g:"M.DY", id:"5", num:true },
+  { f:"",      m:"6",   g:"x̄w",   id:"6", num:true },
+  { f:"",      m:"×",   g:"",     id:"MUL" },
+  { f:"",      m:"RCL", g:"",     id:"RCL" },
+
+  // Row 6: Digits 1,2,3 + Subtraction + RESET
+  { f:"",      m:"1",   g:"x̄,r",  id:"1", num:true },
+  { f:"",      m:"2",   g:"ŷ,r",  id:"2", num:true },
+  { f:"",      m:"3",   g:"n!",   id:"3", num:true },
+  { f:"",      m:"−",   g:"",     id:"SUB" },
+  { f:"FIN",   m:"RESET", g:"",   id:"ON" },
+
+  // Row 7: Shifts, Digit 0, Dot, Addition
+  { f:"",      m:"f",   g:"",     id:"F", cls:"key-f-shift" },
+  { f:"",      m:"g",   g:"",     id:"G", cls:"key-g-shift" },
+  { f:"",      m:"0",   g:"x̄",    id:"0", num:true },
+  { f:"",      m:"·",   g:"s",    id:"DOT", num:true },
+  { f:"",      m:"+",   g:"",     id:"ADD" },
+
+  // Row 8: ENTER spans all 5 columns
+  { f:"",      m:"ENTER", g:"LSTx", id:"ENTER", cls:"key-enter", spanAll:true }
+];
+
+function buildKeypad() {
+  const pad = document.getElementById("keypad");
+  pad.innerHTML = "";
+  KEYS.forEach(k => {
+    const btn = document.createElement("button");
+    let baseClass = "key-base";
+    if (k.num) baseClass += " key-num";
+    if (k.cls) baseClass += " " + k.cls;
+    if (k.spanAll) baseClass += " col-span-5 h-11 flex-row justify-center gap-4";
+
+    btn.className = baseClass;
+    
+    if (k.spanAll) {
+      btn.innerHTML = `
+        <span class="text-[9px] font-bold text-gold-300"></span>
+        <span class="key-label-main text-sm font-extrabold tracking-wider">ENTER</span>
+        <span class="text-[9px] font-bold text-sky-300">g: LSTx</span>
+      `;
+    } else {
+      btn.innerHTML = `
+        <span class="text-[8px] font-extrabold text-gold-400 h-2.5 leading-none truncate">${k.f}</span>
+        <span class="key-label-main text-[13px] font-bold text-white leading-none my-0.5">${k.m}</span>
+        <span class="text-[8px] font-bold text-sky-shift h-2.5 leading-none truncate">${k.g}</span>
+      `;
+    }
+
+    btn.addEventListener("click", () => handleKey(k.id));
+    pad.appendChild(btn);
+  });
+}
+
+function switchTab(tabId, btn) {
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.add("hidden"));
+  document.querySelectorAll(".tab-item").forEach(b => b.classList.remove("active"));
+  document.getElementById(tabId).classList.remove("hidden");
+  if (btn) btn.classList.add("active");
+}
+
+function pushVal(v) {
+  if (state.lift) state.stack = [v, state.stack[0], state.stack[1], state.stack[2]];
+  else state.stack[0] = v;
+  state.lift = true;
+}
+
+function commitBuf() {
+  if (state.buf !== "") {
+    const num = parseFloat(state.buf);
+    pushVal(isNaN(num) ? 0 : num);
+    state.buf = "";
+  }
+}
+
+function decodeDate(enc) {
+  const s = Math.abs(enc).toFixed(6);
+  const [p1Str, frac] = s.split(".");
+  const p1 = parseInt(p1Str, 10);
+  const p2 = parseInt(frac.slice(0, 2), 10);
+  const yr = parseInt(frac.slice(2, 6), 10);
+  const day = state.dateMode === "D.MY" ? p1 : p2;
+  const mon = state.dateMode === "D.MY" ? p2 : p1;
+  const d = new Date(Date.UTC(yr, mon - 1, day));
+  if (d.getUTCFullYear() !== yr || d.getUTCMonth() !== mon - 1 || d.getUTCDate() !== day) {
+    throw "Error 8";
+  }
+  return d;
+}
+
+function encodeDate(d) {
+  const day = d.getUTCDate();
+  const mon = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const yr = String(d.getUTCFullYear()).padStart(4, "0");
+  return state.dateMode === "D.MY" ? parseFloat(`${day}.${mon}${yr}`) : parseFloat(`${parseInt(mon,10)}.${String(day).padStart(2,"0")}${yr}`);
+}
+
+function calcDate() {
+  state.lastX = state.stack[0];
+  const base = decodeDate(state.stack[1]);
+  const days = Math.trunc(state.stack[0]);
+  const target = new Date(base.getTime() + days * 86400000);
+  const enc = encodeDate(target);
+  state.stack = [enc, state.stack[2], state.stack[3], state.stack[3]];
+  state.lift = true;
+  const wd = target.getUTCDay() === 0 ? 7 : target.getUTCDay();
+  const names = ["", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB", "DOM"];
+  state.customMsg = `${enc.toFixed(6)} (${names[wd]})`;
+  state.lastLog = `CÁLCULO DE DATA (g DATE) · @diarioc8\nData Base: ${base.toISOString().slice(0,10)}\nDias Somados: ${days}\nData Resultante: ${target.toISOString().slice(0,10)} (${names[wd]})`;
+}
+
+function deltaDays() {
+  state.lastX = state.stack[0];
+  const d1 = decodeDate(state.stack[1]);
+  const d2 = decodeDate(state.stack[0]);
+  const act = Math.round((d2 - d1) / 86400000);
+  let dd1 = d1.getUTCDate() === 31 ? 30 : d1.getUTCDate();
+  let dd2 = (d2.getUTCDate() === 31 && dd1 === 30) ? 30 : d2.getUTCDate();
+  const d360 = 360 * (d2.getUTCFullYear() - d1.getUTCFullYear()) + 30 * (d2.getUTCMonth() - d1.getUTCMonth()) + (dd2 - dd1);
+  state.stack[0] = act;
+  state.stack[1] = d360;
+  state.lift = true;
+  state.customMsg = `ACT:${act} | 360:${d360}`;
+  state.lastLog = `CONTAGEM DE DIAS (g ΔDYS) · @diarioc8\nData Inicial: ${d1.toISOString().slice(0,10)}\nData Final: ${d2.toISOString().slice(0,10)}\nDias Corridos (Actual): ${act} dias\nBase Comercial (30/360): ${d360} dias`;
+}
+
+function tvmEq(n, iPct, pv, pmt, fv) {
+  const r = iPct / 100;
+  const beg = state.beg ? 1 : 0;
+  if (Math.abs(r) < 1e-12) return pv + pmt * n + fv;
+  return pv + pmt * (1 + r * beg) * ((1 - Math.pow(1 + r, -n)) / r) + fv * Math.pow(1 + r, -n);
+}
+
+function solveTvm(target) {
+  const { n, i, pv, pmt, fv } = state;
+  const r = i / 100;
+  const beg = state.beg ? 1 : 0;
+  let res = 0;
+  if (target === "PV") {
+    res = Math.abs(r) < 1e-12 ? -(pmt * n + fv) : -(pmt * (1 + r * beg) * (1 - Math.pow(1 + r, -n)) / r + fv * Math.pow(1 + r, -n));
+    state.pv = res;
+  } else if (target === "FV") {
+    res = Math.abs(r) < 1e-12 ? -(pv + pmt * n) : -(pv * Math.pow(1 + r, n) + pmt * (1 + r * beg) * (Math.pow(1 + r, n) - 1) / r);
+    state.fv = res;
+  } else if (target === "PMT") {
+    if (n === 0) throw "Error 5";
+    res = Math.abs(r) < 1e-12 ? -(pv + fv) / n : -(pv + fv * Math.pow(1 + r, -n)) / ((1 + r * beg) * (1 - Math.pow(1 + r, -n)) / r);
+    state.pmt = res;
+  } else if (target === "i") {
+    let g = 1.0;
+    for (let iter = 0; iter < 100; iter++) {
+      const f = tvmEq(n, g, pv, pmt, fv);
+      if (Math.abs(f) < 1e-10) break;
+      const fp = (tvmEq(n, g + 1e-6, pv, pmt, fv) - f) / 1e-6;
+      if (Math.abs(fp) < 1e-14) throw "Error 5";
+      g -= f / fp;
+    }
+    res = g;
+    state.i = res;
+  }
+  state.stack[0] = res;
+  state.lift = true;
+  state.lastLog = `VALOR DO DINHEIRO NO TEMPO (TVM) · @diarioc8\nModo: ${state.beg ? "BEG (Antecipado)" : "END (Postecipado)"}\nn = ${state.n}\ni = ${state.i.toFixed(4)}% a.p.\nPV = ${state.pv.toFixed(2)}\nPMT = ${state.pmt.toFixed(2)}\nFV = ${state.fv.toFixed(2)}\n>> Variável Calculada (${target}): ${res.toFixed(4)}`;
+}
+
+function handleKey(id) {
+  state.customMsg = null;
+  try {
+    if (id === "F") { state.shift = state.shift === "f" ? null : "f"; render(); return; }
+    if (id === "G") { state.shift = state.shift === "g" ? null : "g"; render(); return; }
+    const sh = state.shift;
+    state.shift = null;
+
+    if (state.prefix) {
+      const p = state.prefix;
+      state.prefix = null;
+      if ("0123456789".includes(id)) {
+        const idx = parseInt(id, 10);
+        if (p === "STO") { commitBuf(); state.regs[idx] = state.stack[0]; state.lift = true; }
+        if (p === "RCL") { commitBuf(); pushVal(state.regs[idx]); }
+      }
+      render(); return;
+    }
+
+    if (sh === "f") {
+      state.lastWasTvm = false;
+      if ("0123456789".includes(id)) { state.decimals = parseInt(id, 10); }
+      else if (id === "ON") { state.buf = ""; state.n = state.i = state.pv = state.pmt = state.fv = 0; }
+      else if (id === "CLX") {
+        state.buf = ""; state.stack = [0, 0, 0, 0]; state.lastX = 0;
+        state.n = state.i = state.pv = state.pmt = state.fv = 0;
+        state.regs.fill(0); state.lift = false;
+      }
+      else if (id === "PMT") { commitBuf(); state.lastX = state.stack[0]; state.stack[0] = Number(state.stack[0].toFixed(state.decimals)); state.lift = true; }
+      render(); return;
+    }
+
+    if (sh === "g") {
+      state.lastWasTvm = false;
+      if (id === "CHS") { commitBuf(); calcDate(); }
+      else if (id === "DDYS") { commitBuf(); deltaDays(); }
+      else if (id === "4") state.dateMode = "D.MY";
+      else if (id === "5") state.dateMode = "M.DY";
+      else if (id === "7") state.beg = true;
+      else if (id === "8") state.beg = false;
+      else if (id === "ENTER") { commitBuf(); pushVal(state.lastX); }
+      else if (id === "n") { commitBuf(); state.n = state.stack[0] * 12; state.stack[0] = state.n; state.lift = true; }
+      else if (id === "i") { commitBuf(); state.i = state.stack[0] / 12; state.stack[0] = state.i; state.lift = true; }
+      else if (id === "YX") { commitBuf(); if (state.stack[0] < 0) throw "Error 0"; state.lastX = state.stack[0]; state.stack[0] = Math.sqrt(state.stack[0]); state.lift = true; }
+      else if (id === "INV") { commitBuf(); state.lastX = state.stack[0]; state.stack[0] = Math.exp(state.stack[0]); state.lift = true; }
+      else if (id === "SL") { commitBuf(); if (state.stack[0] <= 0) throw "Error 0"; state.lastX = state.stack[0]; state.stack[0] = Math.log(state.stack[0]); state.lift = true; }
+      else if (id === "SOYD") { commitBuf(); state.lastX = state.stack[0]; state.stack[0] = state.stack[0] - Math.trunc(state.stack[0]); state.lift = true; }
+      else if (id === "DB") { commitBuf(); state.lastX = state.stack[0]; state.stack[0] = Math.trunc(state.stack[0]); state.lift = true; }
+      render(); return;
+    }
+
+    if ("0123456789".includes(id)) {
+      state.lastWasTvm = false;
+      state.buf = state.buf === "0" ? id : state.buf + id;
+      render(); return;
+    }
+    if (id === "DOT") {
+      state.lastWasTvm = false;
+      if (!state.buf.includes(".")) state.buf = state.buf === "" ? "0." : state.buf + ".";
+      render(); return;
+    }
+    if (id === "CHS") {
+      if (state.buf) state.buf = state.buf.startsWith("-") ? state.buf.slice(1) : "-" + state.buf;
+      else state.stack[0] = -state.stack[0];
+    } else if (id === "ENTER") {
+      commitBuf();
+      state.stack = [state.stack[0], state.stack[0], state.stack[1], state.stack[2]];
+      state.lift = false;
+    } else if (id === "CLX") {
+      state.buf = ""; state.stack[0] = 0; state.lift = false;
+    } else if (id === "SWAP") {
+      commitBuf(); [state.stack[0], state.stack[1]] = [state.stack[1], state.stack[0]]; state.lift = true;
+    } else if (id === "RDOWN") {
+      commitBuf(); state.stack = [state.stack[1], state.stack[2], state.stack[3], state.stack[0]]; state.lift = true;
+    } else if (id === "YX") {
+      commitBuf(); state.lastX = state.stack[0]; state.stack = [Math.pow(state.stack[1], state.stack[0]), state.stack[2], state.stack[3], state.stack[3]]; state.lift = true;
+    } else if (id === "INV") {
+      commitBuf(); if (state.stack[0] === 0) throw "Error 0"; state.lastX = state.stack[0]; state.stack[0] = 1 / state.stack[0]; state.lift = true;
+    } else if (id === "DB") {
+      commitBuf(); state.lastX = state.stack[0]; state.stack[0] = (state.stack[1] * state.stack[0]) / 100; state.lift = true;
+    } else if (id === "SOYD") {
+      commitBuf(); if (state.stack[1] === 0) throw "Error 0"; state.lastX = state.stack[0]; state.stack[0] = ((state.stack[0] - state.stack[1]) / state.stack[1]) * 100; state.lift = true;
+    } else if (id === "SL") {
+      commitBuf(); if (state.stack[1] === 0) throw "Error 0"; state.lastX = state.stack[0]; state.stack[0] = (state.stack[0] / state.stack[1]) * 100; state.lift = true;
+    } else if (["ADD", "SUB", "MUL", "DIV"].includes(id)) {
+      commitBuf();
+      state.lastX = state.stack[0];
+      const [x, y] = [state.stack[0], state.stack[1]];
+      if (id === "DIV" && x === 0) throw "Error 0";
+      const r = id === "ADD" ? y + x : id === "SUB" ? y - x : id === "MUL" ? y * x : y / x;
+      state.stack = [r, state.stack[2], state.stack[3], state.stack[3]];
+      state.lift = true;
+    } else if (id === "STO" || id === "RCL") {
+      state.prefix = id;
+    } else if (["n", "i", "PV", "PMT", "FV"].includes(id)) {
+      const hasNew = state.buf !== "";
+      commitBuf();
+      if (hasNew || !state.lastWasTvm) {
+        state[id.toLowerCase()] = state.stack[0];
+        state.lift = true;
+        state.lastWasTvm = true;
+      } else {
+        if (id === "n") throw "Error 5";
+        solveTvm(id);
+        state.lastWasTvm = true;
+      }
+    }
+  } catch (err) {
+    state.buf = "";
+    state.customMsg = String(err);
+  }
+  render();
+}
+
+function render() {
+  const main = document.getElementById("lcd-main");
+  if (state.customMsg) {
+    main.textContent = state.customMsg;
+  } else if (state.buf !== "") {
+    main.textContent = state.buf;
+  } else {
+    main.textContent = state.stack[0].toLocaleString("pt-BR", {
+      minimumFractionDigits: state.decimals,
+      maximumFractionDigits: state.decimals
+    });
+  }
+
+  const shiftEl = document.getElementById("lcd-shift-indicator");
+  if (state.shift === "f") shiftEl.innerHTML = `<span class="bg-gold-500 text-navy-950 px-1.5 py-0.5 rounded text-[10px]">f SHIFT</span>`;
+  else if (state.shift === "g") shiftEl.innerHTML = `<span class="bg-sky-shift text-navy-950 px-1.5 py-0.5 rounded text-[10px]">g SHIFT</span>`;
+  else if (state.prefix) shiftEl.innerHTML = `<span class="bg-amber-400 text-navy-950 px-1.5 py-0.5 rounded text-[10px]">${state.prefix}</span>`;
+  else shiftEl.innerHTML = "";
+
+  const flags = [];
+  if (state.beg) flags.push(`<span class="bg-emerald-500/20 text-emerald-900 px-1 rounded">BEGIN</span>`);
+  flags.push(`<span class="bg-navy-900/10 px-1 rounded">${state.dateMode}</span>`);
+  flags.push(`<span class="bg-navy-900/10 px-1 rounded">FIX ${state.decimals}</span>`);
+  document.getElementById("lcd-flags").innerHTML = flags.join(" ");
+
+  document.getElementById("lcd-tvm").innerHTML = `
+    <span>n:${+state.n.toFixed(1)}</span>
+    <span>i:${+state.i.toFixed(2)}%</span>
+    <span>PV:${+state.pv.toFixed(0)}</span>
+    <span>PMT:${+state.pmt.toFixed(0)}</span>
+    <span>FV:${+state.fv.toFixed(0)}</span>
+  `;
+
+  document.getElementById("stack-peek").textContent =
+    `Y:${state.stack[1].toFixed(2)} · Z:${state.stack[2].toFixed(2)} · T:${state.stack[3].toFixed(2)} · LSTx:${state.lastX.toFixed(2)}`;
+}
+
+// Alternar entre gráficos Visuais MTM e ETTJ
+function switchVisualChart(chartType) {
+  const btnMtm = document.getElementById("btn-chart-mtm");
+  const btnEttj = document.getElementById("btn-chart-ettj");
+  const viewMtm = document.getElementById("chart-view-mtm");
+  const viewEttj = document.getElementById("chart-view-ettj");
+
+  if (chartType === "MTM") {
+    btnMtm.classList.add("active", "text-white");
+    btnMtm.classList.remove("text-slate-400");
+    btnEttj.classList.remove("active", "text-white");
+    btnEttj.classList.add("text-slate-400");
+    viewMtm.classList.remove("hidden");
+    viewEttj.classList.add("hidden");
+  } else {
+    btnEttj.classList.add("active", "text-white");
+    btnEttj.classList.remove("text-slate-400");
+    btnMtm.classList.remove("active", "text-white");
+    btnMtm.classList.add("text-slate-400");
+    viewEttj.classList.remove("hidden");
+    viewMtm.classList.add("hidden");
+    renderETTJChart();
+  }
+}
+
+// Função utilitária para cálculo de PU para um dado yield
+function calculatePUForYield(type, ytmAnnual, years) {
+  const numSemesters = Math.round(years * 2);
+  const ytmSem = Math.pow(1 + ytmAnnual, 0.5) - 1;
+  let vnaBase = 1000;
+  let couponRateSem = 0;
+
+  if (type === "NTNB_COUPON") {
+    vnaBase = 4450.00;
+    couponRateSem = Math.pow(1 + 0.06, 0.5) - 1;
+    let pvCoupons = 0;
+    const couponVal = vnaBase * couponRateSem;
+    for (let k = 1; k <= numSemesters; k++) {
+      pvCoupons += couponVal / Math.pow(1 + ytmSem, k);
+    }
+    const pvPrincipal = vnaBase / Math.pow(1 + ytmSem, numSemesters);
+    return pvCoupons + pvPrincipal;
+  } else if (type === "NTNB_PRINCIPAL") {
+    vnaBase = 4450.00;
+    return vnaBase / Math.pow(1 + ytmAnnual, years);
+  } else if (type === "LTN_PREFIX") {
+    vnaBase = 1000.00;
+    return vnaBase / Math.pow(1 + ytmAnnual, years);
+  } else if (type === "NTNF_COUPON") {
+    vnaBase = 1000.00;
+    couponRateSem = Math.pow(1 + 0.10, 0.5) - 1;
+    let pvCoupons = 0;
+    const couponVal = vnaBase * couponRateSem;
+    for (let k = 1; k <= numSemesters; k++) {
+      pvCoupons += couponVal / Math.pow(1 + ytmSem, k);
+    }
+    const pvPrincipal = vnaBase / Math.pow(1 + ytmSem, numSemesters);
+    return pvCoupons + pvPrincipal;
+  }
+  return 1000;
+}
+
+// Renderiza a Curva de Marcação a Mercado com Tangente da Duration Modificada
+function renderMTMChart(baseYield, basePU, modDurationRatio, bondType, years) {
+  const svg = document.getElementById("svg-mtm");
+  const pillsEl = document.getElementById("mtm-pills");
+  const statusEl = document.getElementById("mtm-cur-status");
+  const tooltip = document.getElementById("mtm-tooltip");
+
+  statusEl.textContent = `Tx: ${(baseYield * 100).toFixed(2)}% | PU: R$ ${basePU.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+  const bpsDeltas = [-200, -100, -50, 0, 50, 100, 200];
+  const points = bpsDeltas.map(bps => {
+    const yShift = baseYield + (bps / 10000);
+    const puExact = calculatePUForYield(bondType, Math.max(0.001, yShift), years);
+    const puLinear = basePU * (1 - modDurationRatio * (bps / 10000));
+    const deltaPct = ((puExact - basePU) / basePU) * 100;
+    return { bps, yShift, puExact, puLinear, deltaPct };
+  });
+
+  // Atualizar Pills inferiores
+  pillsEl.innerHTML = points.map(p => {
+    const isBase = p.bps === 0;
+    const sign = p.bps > 0 ? `+${p.bps}` : `${p.bps}`;
+    const signPct = p.deltaPct > 0 ? `+${p.deltaPct.toFixed(1)}%` : `${p.deltaPct.toFixed(1)}%`;
+    const colClass = isBase 
+      ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400 font-extrabold' 
+      : p.deltaPct > 0 
+        ? 'border-navy-700 bg-navy-950 text-gold-300' 
+        : 'border-navy-700 bg-navy-950 text-slate-400';
+    return `
+      <div class="border rounded p-1 ${colClass} cursor-pointer hover:border-gold-500 transition" onclick="highlightMtmPoint(${p.bps}, ${p.puExact}, ${p.deltaPct})">
+        <div class="text-[8px] text-slate-400">${sign}bps</div>
+        <div class="text-[9.5px] font-bold">${signPct}</div>
+        <div class="text-[7.5px] truncate opacity-80">R$ ${Math.round(p.puExact)}</div>
+      </div>
+    `;
+  }).join("");
+
+  // Dimensões do gráfico SVG
+  const width = 400;
+  const height = 170;
+  const padL = 44, padR = 20, padT = 20, padB = 25;
+  const plotW = width - padL - padR;
+  const plotH = height - padT - padB;
+
+  const minPU = Math.min(...points.map(p => Math.min(p.puExact, p.puLinear))) * 0.96;
+  const maxPU = Math.max(...points.map(p => Math.max(p.puExact, p.puLinear))) * 1.04;
+  const minBps = -220;
+  const maxBps = 220;
+
+  const getX = (bps) => padL + ((bps - minBps) / (maxBps - minBps)) * plotW;
+  const getY = (pu) => padT + plotH - ((pu - minPU) / (maxPU - minPU)) * plotH;
+
+  // Grid Lines horizontais
+  let gridLines = "";
+  const yTicks = 4;
+  for (let i = 0; i <= yTicks; i++) {
+    const val = minPU + (i / yTicks) * (maxPU - minPU);
+    const yPos = getY(val);
+    gridLines += `
+      <line x1="${padL}" y1="${yPos}" x2="${width - padR}" y2="${yPos}" stroke="#1E3A5F" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.6"/>
+      <text x="${padL - 4}" y="${yPos + 3}" fill="#64748B" font-size="8" font-family="JetBrains Mono" text-anchor="end">R$ ${Math.round(val)}</text>
+    `;
+  }
+
+  // Linhas verticais para os bps
+  bpsDeltas.forEach(bps => {
+    const xPos = getX(bps);
+    gridLines += `
+      <line x1="${xPos}" y1="${padT}" x2="${xPos}" y2="${padT + plotH}" stroke="${bps === 0 ? '#1F8A5B' : '#132743'}" stroke-width="${bps === 0 ? '1.2' : '0.8'}" opacity="${bps === 0 ? '0.9' : '0.5'}"/>
+      <text x="${xPos}" y="${height - 8}" fill="${bps === 0 ? '#1F8A5B' : '#64748B'}" font-size="8" font-family="JetBrains Mono" font-weight="${bps === 0 ? 'bold' : 'normal'}" text-anchor="middle">${bps === 0 ? 'Base' : (bps > 0 ? `+${bps}` : bps)}</text>
+    `;
+  });
+
+  // Linha exata da Curva MTM (Convexa)
+  const curveD = points.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${getX(p.bps).toFixed(1)} ${getY(p.puExact).toFixed(1)}`).join(" ");
+
+  // Linha reta da Duration Modificada (Tangente)
+  const tangentD = points.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${getX(p.bps).toFixed(1)} ${getY(p.puLinear).toFixed(1)}`).join(" ");
+
+  // Pontos interativos
+  const circles = points.map(p => {
+    const cx = getX(p.bps);
+    const cy = getY(p.puExact);
+    const isBase = p.bps === 0;
+    return `
+      <g class="cursor-pointer group" onmouseenter="showMtmHover('${p.bps}', '${p.puExact.toFixed(2)}', '${p.deltaPct.toFixed(2)}%', ${(p.yShift*100).toFixed(2)}, ${cx}, ${cy})" onmouseleave="hideMtmHover()">
+        <circle cx="${cx}" cy="${cy}" r="${isBase ? '5' : '3.5'}" fill="${isBase ? '#1F8A5B' : '#D4AF37'}" stroke="#0B192C" stroke-width="2" class="transition-transform group-hover:scale-150"/>
+        ${isBase ? `<circle cx="${cx}" cy="${cy}" r="8" fill="none" stroke="#1F8A5B" stroke-width="1.5" opacity="0.6" class="animate-ping"/>` : ''}
+      </g>
+    `;
+  }).join("");
+
+  svg.innerHTML = `
+    <!-- Defs -->
+    <defs>
+      <linearGradient id="curveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#38BDF8"/>
+        <stop offset="50%" stop-color="#D4AF37"/>
+        <stop offset="100%" stop-color="#1F8A5B"/>
+      </linearGradient>
+    </defs>
+    <!-- Grid -->
+    ${gridLines}
+    <!-- Tangente da Duration Modificada -->
+    <path d="${tangentD}" fill="none" stroke="#5BA4E6" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.75"/>
+    <!-- Curva Real de Preço com Convexidade -->
+    <path d="${curveD}" fill="none" stroke="url(#curveGradient)" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Circles -->
+    ${circles}
+    <!-- Marcadores de Eixo -->
+    <text x="${width - padR}" y="${padT + 10}" fill="#D4AF37" font-size="8.5" font-family="JetBrains Mono" font-weight="bold" text-anchor="end">Curva PU (Convexidade)</text>
+    <text x="${width - padR}" y="${padT + 22}" fill="#5BA4E6" font-size="7.5" font-family="JetBrains Mono" text-anchor="end">Tangente D_mod</text>
+  `;
+}
+
+function showMtmHover(bps, pu, pct, yieldVal, cx, cy) {
+  const tooltip = document.getElementById("mtm-tooltip");
+  tooltip.innerHTML = `
+    <div class="text-gold-300 font-bold">Variação: ${bps === '0' ? 'Taxa Base' : (bps > 0 ? `+${bps} bps` : `${bps} bps`)}</div>
+    <div>Taxa Yield: <span class="text-white font-bold">${yieldVal}% a.a.</span></div>
+    <div>PU Estimado: <span class="text-white font-bold">R$ ${pu}</span></div>
+    <div>Impacto MTM: <span class="${parseFloat(pct) >= 0 ? 'text-emerald-400' : 'text-red-400'} font-bold">${pct}</span></div>
+  `;
+  tooltip.style.left = `${Math.min(260, Math.max(10, cx - 60))}px`;
+  tooltip.style.top = `10px`;
+  tooltip.classList.remove("hidden");
+}
+
+function hideMtmHover() {
+  document.getElementById("mtm-tooltip").classList.add("hidden");
+}
+
+function highlightMtmPoint(bps, pu, deltaPct) {
+  state.customMsg = `Choque ${bps}bps: R$ ${pu.toFixed(2)}`;
+  render();
+}
+
+// Renderiza a Estrutura a Termo da Taxa de Juros (ETTJ)
+function renderETTJChart() {
+  const svg = document.getElementById("svg-ettj");
+  if (!svg) return;
+
+  // Curvas representativas de mercado ANBIMA
+  const ettjData = [
+    { maturity: "2026", years: 1.5, ipca: 6.15, prefix: 11.85 },
+    { maturity: "2029", years: 4.5, ipca: 6.35, prefix: 12.10 },
+    { maturity: "2035", years: 10.5, ipca: 6.52, prefix: 12.35 },
+    { maturity: "2045", years: 20.5, ipca: 6.64, prefix: 12.48 },
+    { maturity: "2055", years: 30.5, ipca: 6.70, prefix: 12.55 },
+  ];
+
+  const width = 400;
+  const height = 170;
+  const padL = 36, padR = 24, padT = 24, padB = 25;
+  const plotW = width - padL - padR;
+  const plotH = height - padT - padB;
+
+  const minRate = 5.5;
+  const maxRate = 13.5;
+
+  const getX = (idx) => padL + (idx / (ettjData.length - 1)) * plotW;
+  const getY = (rate) => padT + plotH - ((rate - minRate) / (maxRate - minRate)) * plotH;
+
+  let grid = "";
+  // Linhas horizontais de taxa
+  [6, 8, 10, 12].forEach(rate => {
+    const yPos = getY(rate);
+    grid += `
+      <line x1="${padL}" y1="${yPos}" x2="${width - padR}" y2="${yPos}" stroke="#1E3A5F" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.6"/>
+      <text x="${padL - 4}" y="${yPos + 3}" fill="#64748B" font-size="8" font-family="JetBrains Mono" text-anchor="end">${rate}%</text>
+    `;
+  });
+
+  // Linhas verticais de vencimento
+  ettjData.forEach((d, idx) => {
+    const xPos = getX(idx);
+    grid += `
+      <line x1="${xPos}" y1="${padT}" x2="${xPos}" y2="${padT + plotH}" stroke="#132743" stroke-width="0.8" opacity="0.6"/>
+      <text x="${xPos}" y="${height - 8}" fill="#94A3B8" font-size="8" font-family="JetBrains Mono" text-anchor="middle">${d.maturity}</text>
+    `;
+  });
+
+  const ipcaPath = ettjData.map((d, idx) => `${idx === 0 ? 'M' : 'L'} ${getX(idx).toFixed(1)} ${getY(d.ipca).toFixed(1)}`).join(" ");
+  const prefixPath = ettjData.map((d, idx) => `${idx === 0 ? 'M' : 'L'} ${getX(idx).toFixed(1)} ${getY(d.prefix).toFixed(1)}`).join(" ");
+
+  // Ponto da simulação atual sobreposto se couber
+  let curSimDot = "";
+  if (lastTreasurySim) {
+    const curYield = lastTreasurySim.iAnnPct;
+    const isIpca = !lastTreasurySim.titleName.includes("Prefixado");
+    const yPos = getY(curYield);
+    // aproximar índice no eixo x pelo prazo em anos
+    const approxIdx = Math.min(4, Math.max(0, (lastTreasurySim.n / 2) / 7.5));
+    const xPos = getX(approxIdx);
+    curSimDot = `
+      <circle cx="${xPos}" cy="${yPos}" r="6" fill="#1F8A5B" stroke="#FFFFFF" stroke-width="2"/>
+      <text x="${xPos}" y="${yPos - 9}" fill="#1F8A5B" font-size="8" font-family="JetBrains Mono" font-weight="bold" text-anchor="middle">Sua Simulação (${curYield.toFixed(2)}%)</text>
+    `;
+  }
+
+  const nodes = ettjData.map((d, idx) => {
+    const x = getX(idx);
+    const yIpca = getY(d.ipca);
+    const yPref = getY(d.prefix);
+    return `
+      <circle cx="${x}" cy="${yIpca}" r="3.5" fill="#D4AF37" stroke="#0B192C" stroke-width="1.5" class="cursor-pointer" onclick="selectEttjPoint('${d.maturity}', 'IPCA+', ${d.ipca})"/>
+      <text x="${x}" y="${yIpca - 6}" fill="#D4AF37" font-size="7.5" font-family="JetBrains Mono" font-weight="bold" text-anchor="middle">${d.ipca}%</text>
+      
+      <circle cx="${x}" cy="${yPref}" r="3.5" fill="#38BDF8" stroke="#0B192C" stroke-width="1.5" class="cursor-pointer" onclick="selectEttjPoint('${d.maturity}', 'Prefixado', ${d.prefix})"/>
+      <text x="${x}" y="${yPref - 6}" fill="#38BDF8" font-size="7.5" font-family="JetBrains Mono" font-weight="bold" text-anchor="middle">${d.prefix}%</text>
+    `;
+  }).join("");
+
+  svg.innerHTML = `
+    ${grid}
+    <!-- Curva IPCA+ Real -->
+    <path d="${ipcaPath}" fill="none" stroke="#D4AF37" stroke-width="2.2" stroke-linecap="round"/>
+    <!-- Curva Prefixado -->
+    <path d="${prefixPath}" fill="none" stroke="#38BDF8" stroke-width="2.2" stroke-linecap="round"/>
+    ${nodes}
+    ${curSimDot}
+  `;
+}
+
+function selectEttjPoint(mat, tipo, taxa) {
+  document.getElementById("tb-yield").value = taxa.toFixed(2);
+  state.customMsg = `ETTJ ${mat} ${tipo}: ${taxa}%`;
+  render();
+}
+
+// Módulo Tesouro Direto / Títulos Públicos (NTN-B, NTN-F, LTN) com Duration & Sensibilidade
+function onBondTypeChange() {
+  const type = document.getElementById("tb-type").value;
+  const ipcaWrap = document.getElementById("wrap-ipca");
+  const yieldInput = document.getElementById("tb-yield");
+  
+  if (type === "LTN_PREFIX") {
+    ipcaWrap.classList.add("opacity-40", "pointer-events-none");
+    yieldInput.value = "11.75";
+  } else if (type === "NTNF_COUPON") {
+    ipcaWrap.classList.add("opacity-40", "pointer-events-none");
+    yieldInput.value = "12.10";
+  } else {
+    ipcaWrap.classList.remove("opacity-40", "pointer-events-none");
+    yieldInput.value = "6.45";
+  }
+  autoUpdateIR();
+}
+
+function autoUpdateIR() {
+  const yrs = parseFloat(document.getElementById("tb-years").value) || 1;
+  const days = yrs * 365;
+  const irSelect = document.getElementById("tb-ir");
+  if (days <= 180) irSelect.value = "22.5";
+  else if (days <= 360) irSelect.value = "20.0";
+  else if (days <= 720) irSelect.value = "17.5";
+  else irSelect.value = "15.0";
+}
+
+function calcTreasuryBond() {
+  const type = document.getElementById("tb-type").value;
+  const ytmAnnual = (parseFloat(document.getElementById("tb-yield").value) || 0) / 100;
+  const ipcaAnnual = (parseFloat(document.getElementById("tb-ipca").value) || 0) / 100;
+  const years = parseFloat(document.getElementById("tb-years").value) || 1;
+  const investTotal = parseFloat(document.getElementById("tb-invest").value) || 1000;
+  const irRate = (parseFloat(document.getElementById("tb-ir").value) || 15) / 100;
+
+  const numSemesters = Math.round(years * 2);
+  const tbody = document.querySelector("#tb-table tbody");
+  tbody.innerHTML = "";
+
+  let pu = 0;
+  let couponRateSem = 0; // taxa semestral de cupom
+  let ytmSem = Math.pow(1 + ytmAnnual, 0.5) - 1; // taxa equivalente ao semestre ANBIMA
+  let vnaBase = 1000;
+  let titleName = "";
+  let rows = [];
+  let totalGrossCoupons = 0;
+  let totalNetCoupons = 0;
+  let totalIRPaid = 0;
+  let principalRedemptionGross = 0;
+  let principalRedemptionNet = 0;
+
+  if (type === "NTNB_COUPON") {
+    titleName = "Tesouro IPCA+ com Juros Semestrais (NTN-B)";
+    // VNA base projetado da NTN-B ~ R$ 4.450,00
+    // Cupom semestral oficial NTN-B = (1 + 0.06)^(1/2) - 1 = 2.956301%
+    vnaBase = 4450.00;
+    couponRateSem = Math.pow(1 + 0.06, 0.5) - 1; // ~ 0.029563
+    
+    // Cálculo do PU com metodologia ANBIMA: soma do valor presente dos cupons + principal
+    let pvCoupons = 0;
+    const couponVal = vnaBase * couponRateSem;
+    for (let k = 1; k <= numSemesters; k++) {
+      pvCoupons += couponVal / Math.pow(1 + ytmSem, k);
+    }
+    const pvPrincipal = vnaBase / Math.pow(1 + ytmSem, numSemesters);
+    pu = pvCoupons + pvPrincipal;
+
+  } else if (type === "NTNB_PRINCIPAL") {
+    titleName = "Tesouro IPCA+ Principal (NTN-B Principal)";
+    vnaBase = 4450.00;
+    couponRateSem = 0;
+    pu = vnaBase / Math.pow(1 + ytmAnnual, years);
+
+  } else if (type === "LTN_PREFIX") {
+    titleName = "Tesouro Prefixado (LTN)";
+    vnaBase = 1000.00; // VNA no vencimento de R$ 1.000,00
+    couponRateSem = 0;
+    pu = vnaBase / Math.pow(1 + ytmAnnual, years);
+
+  } else if (type === "NTNF_COUPON") {
+    titleName = "Tesouro Prefixado com Juros (NTN-F)";
+    vnaBase = 1000.00;
+    couponRateSem = Math.pow(1 + 0.10, 0.5) - 1; // 4.880885% ao semestre
+    let pvCoupons = 0;
+    const couponVal = vnaBase * couponRateSem;
+    for (let k = 1; k <= numSemesters; k++) {
+      pvCoupons += couponVal / Math.pow(1 + ytmSem, k);
+    }
+    const pvPrincipal = vnaBase / Math.pow(1 + ytmSem, numSemesters);
+    pu = pvCoupons + pvPrincipal;
+  }
+
+  const qty = investTotal / pu;
+  const couponPerBond = vnaBase * couponRateSem;
+  const couponGrossTotal = couponPerBond * qty;
+
+  // Variáveis para somatórios de Macaulay Duration institucional:
+  // D_Macaulay (semestres) = sum[ s * VP(CF_s) ] / PU_unitário
+  let sumTimeDiscountedPU = 0;
+  let sumPvCashFlowPU = 0;
+
+  // Cronograma de Cupons e Ponderação de Duration
+  for (let s = 1; s <= numSemesters; s++) {
+    const isMaturity = (s === numSemesters);
+    const grossCupUnit = (couponRateSem > 0) ? couponPerBond : 0;
+    const grossCupTotal = (couponRateSem > 0) ? couponGrossTotal : 0;
+    
+    // Regressiva de IR de acordo com o prazo do cupom
+    const daysCup = s * 182.5;
+    let cupIR = 0.15;
+    if (daysCup <= 180) cupIR = 0.225;
+    else if (daysCup <= 360) cupIR = 0.20;
+    else if (daysCup <= 720) cupIR = 0.175;
+    else cupIR = 0.15;
+
+    const irValTotal = grossCupTotal * cupIR;
+    const netCupTotal = grossCupTotal - irValTotal;
+    
+    // Fluxo do título por unidade de PU para a duration oficial ANBIMA
+    let cashFlowUnit = grossCupUnit;
+    let redemptionValTotal = 0;
+    let redemptionNetTotal = 0;
+
+    if (isMaturity) {
+      cashFlowUnit += vnaBase; // resgate principal por título
+      if (type.startsWith("NTNB")) {
+        const ipcaMultiplier = Math.pow(1 + ipcaAnnual, years);
+        redemptionValTotal = qty * vnaBase * ipcaMultiplier;
+        const gain = Math.max(0, redemptionValTotal - investTotal);
+        const irRedemption = gain * irRate;
+        redemptionNetTotal = redemptionValTotal - irRedemption;
+      } else {
+        redemptionValTotal = qty * vnaBase;
+        const gain = Math.max(0, redemptionValTotal - investTotal);
+        const irRedemption = gain * irRate;
+        redemptionNetTotal = redemptionValTotal - irRedemption;
+      }
+      principalRedemptionGross = redemptionValTotal;
+      principalRedemptionNet = redemptionNetTotal;
+    }
+
+    // Desconto a valor presente por unidade: VP(CF_s) = CF_s / (1 + y_sem)^s
+    const discountFactor = Math.pow(1 + ytmSem, s);
+    const pvFlowUnit = cashFlowUnit / discountFactor;
+    const timeWeightedPvUnit = s * pvFlowUnit;
+
+    sumPvCashFlowPU += pvFlowUnit;
+    sumTimeDiscountedPU += timeWeightedPvUnit;
+
+    const flowTotalNet = netCupTotal + redemptionNetTotal;
+
+    totalGrossCoupons += grossCupTotal;
+    totalNetCoupons += netCupTotal;
+    totalIRPaid += irValTotal;
+
+    rows.push({
+      sem: s,
+      netCupTotal,
+      grossCashFlowTotal: grossCupTotal + (isMaturity ? (qty * vnaBase) : 0),
+      pvFlowUnit,
+      timeWeightedPvUnit,
+      flowTotalNet,
+      isMaturity
+    });
+
+    tbody.innerHTML += `
+      <tr class="${isMaturity ? 'bg-gold-500/10 font-bold' : ''}">
+        <td class="p-1.5 text-center text-gold-400">${s}º ${isMaturity ? '⭐' : ''}</td>
+        <td class="p-1.5 text-right text-emerald-400">R$ ${netCupTotal.toFixed(2)}</td>
+        <td class="p-1.5 text-right font-medium">R$ ${(grossCupTotal + (isMaturity ? (qty * vnaBase) : 0)).toFixed(2)}</td>
+        <td class="p-1.5 text-right text-sky-shift font-mono">R$ ${pvFlowUnit.toFixed(2)}</td>
+        <td class="p-1.5 text-right text-gold-300 font-mono">R$ ${timeWeightedPvUnit.toFixed(2)}</td>
+        <td class="p-1.5 text-right text-white font-bold">R$ ${flowTotalNet.toFixed(2)}</td>
+      </tr>
+    `;
+  }
+
+  // --- CÁLCULO INSTITUCIONAL DE DURATION & SENSIBILIDADE ---
+  let macaulayDurationSem = sumTimeDiscountedPU / pu;
+  let macaulayDurationYears = macaulayDurationSem / 2;
+  
+  if (couponRateSem === 0) {
+    macaulayDurationYears = years;
+    macaulayDurationSem = years * 2;
+  }
+
+  const macaulayDu252 = Math.round(macaulayDurationYears * 252);
+  const macaulayDc365 = Math.round(macaulayDurationYears * 365);
+
+  const modifiedDurationPct = (macaulayDurationYears / (1 + ytmAnnual)) * 100;
+  const modDurationRatio = macaulayDurationYears / (1 + ytmAnnual);
+
+  const dv01PerUnit = pu * modDurationRatio * 0.0001;
+  const dv01PortfolioTotal = dv01PerUnit * qty;
+
+  // Atualizar cards de métricas de risco / sensibilidade
+  document.getElementById("kpi-mac-years").innerHTML = `${macaulayDurationYears.toFixed(2)} <span class="text-[10px] font-sans font-normal text-slate-400">anos</span>`;
+  document.getElementById("kpi-mac-days").textContent = `${macaulayDu252.toLocaleString('pt-BR')} d.u. · ${macaulayDc365.toLocaleString('pt-BR')} d.c.`;
+  
+  document.getElementById("kpi-mod-duration").innerHTML = `${modifiedDurationPct.toFixed(2)}% <span class="text-[10px] font-sans font-normal text-slate-400">/ 100bps</span>`;
+  document.getElementById("kpi-mod-sub").textContent = `ΔP/P: -${modifiedDurationPct.toFixed(2)}% p/ +1% taxa`;
+
+  document.getElementById("kpi-dv01-pu").innerHTML = `R$ ${dv01PerUnit.toFixed(2)} <span class="text-[10px] font-sans font-normal text-slate-400">/ PU</span>`;
+  document.getElementById("kpi-dv01-total").textContent = `Portfólio: R$ ${dv01PortfolioTotal.toFixed(2)} / bps`;
+
+  // Cálculos de rentabilidade global
+  const grandNetTotal = totalNetCoupons + principalRedemptionNet;
+  const netProfit = grandNetTotal - investTotal;
+  const netYieldTotalPct = (netProfit / investTotal) * 100;
+  const netAnnualizedPct = (Math.pow(grandNetTotal / investTotal, 1 / years) - 1) * 100;
+
+  // Atualizar cards de resultado padrão
+  document.getElementById("res-pu").textContent = `R$ ${pu.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  document.getElementById("res-qty").textContent = `${qty.toFixed(4)} títulos`;
+  document.getElementById("res-net-total").textContent = `R$ ${grandNetTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  document.getElementById("res-net-yield").textContent = `+${netYieldTotalPct.toFixed(2)}% (+${netAnnualizedPct.toFixed(2)}% a.a.)`;
+  document.getElementById("coupon-count-badge").textContent = `${numSemesters} semestres (${years} anos)`;
+
+  // Gravar estado da simulação para integração com TVM RPN e gráficos
+  lastTreasurySim = {
+    titleName,
+    pu,
+    qty,
+    n: numSemesters,
+    iSemPct: ytmSem * 100,
+    iAnnPct: ytmAnnual * 100,
+    pv: investTotal,
+    pmtCup: couponGrossTotal,
+    fvGross: principalRedemptionGross,
+    grandNetTotal,
+    netYieldTotalPct,
+    macaulayDurationYears,
+    modifiedDurationPct,
+    dv01PerUnit,
+    dv01PortfolioTotal
+  };
+
+  // Renderizar Gráficos de Marcação a Mercado e ETTJ
+  renderMTMChart(ytmAnnual, pu, modDurationRatio, type, years);
+  renderETTJChart();
+
+  // Fita de Auditoria Institucional com Memória de Risco e Duration
+  const log = [
+    `ANÁLISE DE TÍTULOS PÚBLICOS & RISCO DE TAXA (ANBIMA) · @diarioc8`,
+    `Título: ${titleName}`,
+    `Data do Cálculo: ${new Date().toLocaleDateString("pt-BR")} às ${new Date().toLocaleTimeString("pt-BR")}`,
+    `----------------------------------------------------`,
+    `Investimento Total: R$ ${investTotal.toFixed(2)}`,
+    `Preço Unitário (PU Compra): R$ ${pu.toFixed(4)}`,
+    `Quantidade Comprada: ${qty.toFixed(6)} títulos`,
+    `Taxa Acordada (Yield): ${(ytmAnnual * 100).toFixed(2)}% a.a. (Eq. Semestral: ${(ytmSem * 100).toFixed(4)}%)`,
+    type.startsWith("NTNB") ? `Inflação Projetada (IPCA): ${(ipcaAnnual * 100).toFixed(2)}% a.a.` : `Modalidade: Prefixada (Sem IPCA)`,
+    `Prazo de Vencimento: ${years} anos (${numSemesters} semestres)`,
+    `Alíquota IR Vencimento: ${(irRate * 100).toFixed(1)}%`,
+    `----------------------------------------------------`,
+    `INDICADORES INSTITUCIONAIS DE RISCO & SENSIBILIDADE:`,
+    `1. Duration de Macaulay (D_mac): ${macaulayDurationYears.toFixed(3)} anos`,
+    `   -> Prazo médio ponderado de recebimento dos fluxos`,
+    `   -> Em Dias Úteis (base 252 d.u.): ${macaulayDu252.toLocaleString('pt-BR')} d.u.`,
+    `   -> Em Dias Corridos (base 365 d.c.): ${macaulayDc365.toLocaleString('pt-BR')} d.c.`,
+    `2. Duration Modificada (D_mod): ${modifiedDurationPct.toFixed(3)}% por 100 bps (+1% a.a.)`,
+    `   -> Fórmula: D_mod = D_mac / (1 + y_anual)`,
+    `   -> Sensibilidade: Um aumento de 100 bps (+1%) na taxa gera queda estimada de ${modifiedDurationPct.toFixed(2)}% no PU`,
+    `3. DV01 (Dollar Value of 01): R$ ${dv01PerUnit.toFixed(4)} por PU / 1 bps`,
+    `   -> Impacto monetário em R$ no título para cada 0,01% (1 basis point) de oscilação`,
+    `   -> DV01 Total da Carteira (R$ ${investTotal.toFixed(2)} aplicados): R$ ${dv01PortfolioTotal.toFixed(2)} / bps`,
+    `----------------------------------------------------`,
+    `FLUXO DE CAIXA DO INVESTIDOR:`,
+    couponRateSem > 0 ? `Cupons Brutos Semestrais: R$ ${couponGrossTotal.toFixed(2)} por semestre` : `Cupons: Isento de cupons (Juros no vencimento)`,
+    `Total Cupons Líquidos Recebidos: R$ ${totalNetCoupons.toFixed(2)}`,
+    `Resgate Principal Líquido (Maturity): R$ ${principalRedemptionNet.toFixed(2)}`,
+    `----------------------------------------------------`,
+    `VALOR LÍQUIDO FINAL TOTAL: R$ ${grandNetTotal.toFixed(2)}`,
+    `Ganho Líquido de Capital: R$ ${netProfit.toFixed(2)}`,
+    `Rentabilidade Líquida Total: +${netYieldTotalPct.toFixed(2)}% (+${netAnnualizedPct.toFixed(2)}% ao ano composto)`
+  ];
+
+  state.lastLog = log.join("\n");
+}
+
+function sendTreasuryToRPN() {
+  if (!lastTreasurySim) {
+    calcTreasuryBond();
+  }
+  if (!lastTreasurySim) return;
+
+  // Carregar registradores TVM da 12C:
+  state.n = lastTreasurySim.n;
+  state.i = lastTreasurySim.iSemPct;
+  state.pv = -lastTreasurySim.pv;
+  state.pmt = lastTreasurySim.pmtCup;
+  state.fv = lastTreasurySim.fvGross;
+
+  // Coloca o Preço Unitário no topo do Visor X
+  pushVal(lastTreasurySim.pu);
+  state.customMsg = `PU: ${lastTreasurySim.pu.toFixed(2)}`;
+  render();
+
+  // Alterna suavemente para a aba Calculadora
+  const calcBtn = document.querySelectorAll(".tab-item")[0];
+  switchTab("tab-calc", calcBtn);
+}
+
+// Módulo Fluxo de Caixa
+function calcCashFlow() {
+  const cf0 = parseFloat(document.getElementById("cf0-input").value) || 0;
+  const r = (parseFloat(document.getElementById("cf-rate").value) || 0) / 100;
+  const cfs = document.getElementById("cf-list").value.split(",").map(v => parseFloat(v.trim()) || 0);
+
+  let npv = cf0;
+  cfs.forEach((cf, idx) => { npv += cf / Math.pow(1 + r, idx + 1); });
+
+  let irr = 0.1;
+  for (let iter = 0; iter < 100; iter++) {
+    let f = cf0, fp = 0;
+    cfs.forEach((cf, idx) => {
+      const t = idx + 1;
+      f += cf / Math.pow(1 + irr, t);
+      fp -= (t * cf) / Math.pow(1 + irr, t + 1);
+    });
+    if (Math.abs(f) < 1e-8) break;
+    if (Math.abs(fp) < 1e-12) break;
+    irr -= f / fp;
+  }
+
+  const out = `FLUXO DE CAIXA DESCONTADO (@diarioc8)\nCF0: R$ ${cf0.toFixed(2)}\nFluxos Futuros: [${cfs.join(", ")}]\nTaxa de Desconto: ${(r*100).toFixed(2)}% a.p.\n----------------------------------------\nVPL (NPV): R$ ${npv.toFixed(2)}\nTIR (IRR): ${(irr*100).toFixed(2)}% a.p.`;
+  document.getElementById("cf-result").textContent = out;
+  state.lastLog = out;
+  state.stack[0] = npv;
+  render();
+}
+
+// Módulo Depreciação
+function buildDepSchedule() {
+  const cost = parseFloat(document.getElementById("dep-cost").value) || 0;
+  const salvage = parseFloat(document.getElementById("dep-salvage").value) || 0;
+  const n = parseInt(document.getElementById("dep-years").value, 10) || 1;
+  const method = document.getElementById("dep-method").value;
+  const tbody = document.querySelector("#dep-table tbody");
+  tbody.innerHTML = "";
+
+  const depr = cost - salvage;
+  const soyd = (n * (n + 1)) / 2;
+  let cum = 0, bv = cost;
+  let logLines = [`CRONOGRAMA DE DEPRECIAÇÃO (${method}) · @diarioc8`, `Custo: R$ ${cost.toFixed(2)} | Residual: R$ ${salvage.toFixed(2)} | Vida: ${n} anos`];
+
+  for (let yr = 1; yr <= n; yr++) {
+    let d = 0;
+    if (method === "SL") d = depr / n;
+    else if (method === "SOYD") d = (depr * (n - yr + 1)) / soyd;
+    else if (method === "DB") d = Math.min(bv * (2 / n), Math.max(0, bv - salvage));
+    cum += d;
+    bv -= d;
+    tbody.innerHTML += `<tr><td class="p-2 text-center font-bold text-gold-400">${yr}</td><td class="p-2 text-right">R$ ${d.toFixed(2)}</td><td class="p-2 text-right">R$ ${cum.toFixed(2)}</td><td class="p-2 text-right font-bold text-white">R$ ${bv.toFixed(2)}</td></tr>`;
+    logLines.push(`Ano ${yr}: Dep = R$ ${d.toFixed(2)} | Acum = R$ ${cum.toFixed(2)} | Saldo = R$ ${bv.toFixed(2)}`);
+  }
+  state.lastLog = logLines.join("\n");
+}
+
+// Módulo Amortização
+function buildAmortTable() {
+  const pv = parseFloat(document.getElementById("am-pv").value) || 0;
+  const r = (parseFloat(document.getElementById("am-rate").value) || 0) / 100;
+  const n = parseInt(document.getElementById("am-n").value, 10) || 1;
+  const sys = document.getElementById("am-sys").value;
+  const tbody = document.querySelector("#amort-table tbody");
+  tbody.innerHTML = "";
+
+  let saldo = pv;
+  const pmtPrice = r === 0 ? pv / n : pv * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+  const amortSac = pv / n;
+  let logLines = [`TABELA DE AMORTIZAÇÃO (${sys}) · @diarioc8`, `Financiado: R$ ${pv.toFixed(2)} | Taxa: ${(r*100).toFixed(2)}% | Prazo: ${n}m`];
+
+  for (let m = 1; m <= n; m++) {
+    const juros = saldo * r;
+    const amort = sys === "PRICE" ? (pmtPrice - juros) : amortSac;
+    const pmt = amort + juros;
+    saldo = Math.max(0, saldo - amort);
+    tbody.innerHTML += `<tr><td class="p-2 text-center font-bold text-gold-400">${m}</td><td class="p-2 text-right font-bold text-emerald-400">R$ ${pmt.toFixed(2)}</td><td class="p-2 text-right">R$ ${juros.toFixed(2)}</td><td class="p-2 text-right">R$ ${amort.toFixed(2)}</td><td class="p-2 text-right font-bold text-white">R$ ${saldo.toFixed(2)}</td></tr>`;
+    if (m <= 12) logLines.push(`Mês ${m}: Pmt=R$ ${pmt.toFixed(2)} | Juros=R$ ${juros.toFixed(2)} | Amort=R$ ${amort.toFixed(2)} | Saldo=R$ ${saldo.toFixed(2)}`);
+  }
+  state.lastLog = logLines.join("\n");
+}
+
+// Modal & Exportações
+function openReasoningModal() {
+  const header = `📊 MEMÓRIA DE CÁLCULO FINANCEIRO
+Institucional: @diarioc8
+Data: ${new Date().toLocaleDateString("pt-BR")} às ${new Date().toLocaleTimeString("pt-BR")}
+Visor Atual (X): ${state.stack[0].toFixed(state.decimals)}
+Pilha RPN: Y=${state.stack[1].toFixed(2)} | Z=${state.stack[2].toFixed(2)} | T=${state.stack[3].toFixed(2)}
+==========================================\n`;
+  document.getElementById("reasoning-text").textContent = header + state.lastLog;
+  document.getElementById("reasoning-modal").classList.remove("hidden");
+}
+
+function closeReasoningModal() {
+  document.getElementById("reasoning-modal").classList.add("hidden");
+}
+
+async function shareReasoning() {
+  const text = document.getElementById("reasoning-text").textContent;
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: "Memória de Cálculo · @diarioc8", text });
+    } catch (e) {}
+  } else {
+    copyReasoning();
+  }
+}
+
+function copyReasoning() {
+  const text = document.getElementById("reasoning-text").textContent;
+  navigator.clipboard.writeText(text);
+  alert("Memória de cálculo copiada para a área de transferência!");
+}
+
+function downloadReasoningTXT() {
+  const text = document.getElementById("reasoning-text").textContent;
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "memoria_calculo_diarioc8.txt";
+  a.click();
+}
+
+function downloadCSV(filename, tableId) {
+  const rows = Array.from(document.querySelectorAll(`#${tableId} tr`));
+  if (rows.length <= 1) { alert("Gere a tabela primeiro antes de baixar."); return; }
+  const csv = rows.map(tr => Array.from(tr.children).map(td => `"${td.textContent.trim()}"`).join(";")).join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+buildKeypad();
+render();
+calcTreasuryBond(); // Inicializa dados do Tesouro Direto com métricas de duration e gráficos
+</script>
+</body></html>
